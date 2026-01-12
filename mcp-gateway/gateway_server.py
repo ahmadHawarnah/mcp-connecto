@@ -576,7 +576,7 @@ def main() -> int:
         print("Press Ctrl+C to stop the server")
     
         try:
-            uvicorn.run(http_app, host="127.0.0.1", port=port)
+            uvicorn.run(http_app, host="0.0.0.0", port=port)
         except KeyboardInterrupt:
             print("\nGateway server stopped.")
     else:
