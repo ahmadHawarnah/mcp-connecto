@@ -194,25 +194,32 @@ def healthcheck(request: Request) -> PlainTextResponse:
 def search_content(
     query: str,
     space_key: Optional[str] = None,
-    content_type: str = "page",
-    max_results: int = 25
+    content_type: Optional[str] = None,
+    max_results: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     Search for content in Confluence using CQL (Confluence Query Language)
     
     Args:
         query: Search query text
-        space_key: Limit search to specific space (optional, defaults to config value)
-        content_type: Type of content to search (page, blogpost, comment, attachment)
-        max_results: Maximum number of results to return
+        space_key: Limit search to specific space (optional, defaults to 'CONLP')
+        content_type: Type of content to search (page, blogpost, comment, attachment) - defaults from config
+        max_results: Maximum number of results to return - defaults from config
     
     Returns:
         Search results with page details
     """
-    # Get default space from config if not provided
+    config = _load_config()
+    
+    # Get defaults from config if not provided
     if space_key is None:
-        config = _load_config()
-        space_key = config.get('search_defaults', {}).get('space_key')
+        space_key = config.get('confluence', {}).get('default_space', 'CONLP')
+    
+    if content_type is None:
+        content_type = config.get('search_defaults', {}).get('content_type', 'page')
+    
+    if max_results is None:
+        max_results = config.get('search_defaults', {}).get('max_results', 25)
     
     # Build CQL query
     cql_parts = [f'text ~ "{query}"', f'type = {content_type}']
@@ -342,19 +349,24 @@ def update_page(
 
 @mcp.tool
 def list_spaces(
-    max_results: int = 25,
+    max_results: Optional[int] = None,
     space_type: str = "global"
 ) -> Dict[str, Any]:
     """
     List Confluence spaces
     
     Args:
-        max_results: Maximum number of spaces to return
+        max_results: Maximum number of spaces to return (defaults from config)
         space_type: Type of spaces to list (global, personal)
     
     Returns:
         List of spaces
     """
+    # Get default max_results from config if not provided
+    if max_results is None:
+        config = _load_config()
+        max_results = config.get('search_defaults', {}).get('max_results', 25)
+    
     params = {
         "limit": max_results,
         "type": space_type,
@@ -384,7 +396,7 @@ def get_space(
 @mcp.tool
 def list_pages_in_space(
     space_key: str,
-    max_results: int = 50,
+    max_results: Optional[int] = None,
     expand: str = "version,space"
 ) -> Dict[str, Any]:
     """
@@ -392,12 +404,17 @@ def list_pages_in_space(
     
     Args:
         space_key: Space key
-        max_results: Maximum number of pages to return
+        max_results: Maximum number of pages to return (defaults from config)
         expand: Comma-separated list of properties to expand
     
     Returns:
         List of pages in the space
     """
+    # Get default max_results from config if not provided
+    if max_results is None:
+        config = _load_config()
+        max_results = config.get('search_defaults', {}).get('max_results', 25)
+    
     params = {
         "spaceKey": space_key,
         "limit": max_results,
@@ -428,18 +445,23 @@ def get_page_children(
 @mcp.tool
 def get_page_attachments(
     page_id: str,
-    max_results: int = 50
+    max_results: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     Get attachments for a specific page
     
     Args:
         page_id: Page ID
-        max_results: Maximum number of attachments to return
+        max_results: Maximum number of attachments to return (defaults from config)
     
     Returns:
         List of attachments
     """
+    # Get default max_results from config if not provided
+    if max_results is None:
+        config = _load_config()
+        max_results = config.get('search_defaults', {}).get('max_results', 25)
+    
     params = {
         "limit": max_results,
         "expand": "version"
@@ -450,18 +472,23 @@ def get_page_attachments(
 @mcp.tool
 def get_page_comments(
     page_id: str,
-    max_results: int = 50
+    max_results: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     Get comments for a specific page
     
     Args:
         page_id: Page ID
-        max_results: Maximum number of comments to return
+        max_results: Maximum number of comments to return (defaults from config)
     
     Returns:
         List of comments
     """
+    # Get default max_results from config if not provided
+    if max_results is None:
+        config = _load_config()
+        max_results = config.get('search_defaults', {}).get('max_results', 25)
+    
     params = {
         "limit": max_results,
         "expand": "body.view,version"
