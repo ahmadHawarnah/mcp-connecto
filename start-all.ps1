@@ -47,11 +47,11 @@ try {
     Write-Host "      OK MCP Docupedia Server gestartet (Port 8004, PID: $($docupediaProcess.Id))" -ForegroundColor $DocupediaColor
     Start-Sleep -Milliseconds 2000
 
-    # 3. Gateway Server starten (Port 8001)
-    Write-Host "[3/3] Starte Gateway Server..." -ForegroundColor $UIColor
-    $gatewayProcess = Start-Process -FilePath "uv" -ArgumentList "run", "gateway_server.py", "8001" -WorkingDirectory ".\mcp-gateway" -WindowStyle Normal -PassThru
-    $processes += $gatewayProcess
-    Write-Host "      OK Gateway Server gestartet (Port 8001, PID: $($gatewayProcess.Id))" -ForegroundColor $UIColor
+    # 3. Gateway UI starten (Port 8001)
+    Write-Host "[3/3] Starte Gateway UI Dashboard..." -ForegroundColor $UIColor
+    $uiProcess = Start-Process -FilePath "uv" -ArgumentList "run", "ui.py" -WorkingDirectory ".\mcp-gateway" -WindowStyle Normal -PassThru
+    $processes += $uiProcess
+    Write-Host "      OK Gateway UI Dashboard gestartet (Port 8001, PID: $($uiProcess.Id))" -ForegroundColor $UIColor
     
     Write-Host ""
     Write-Host "==================================" -ForegroundColor Cyan
@@ -59,13 +59,14 @@ try {
     Write-Host "==================================" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Services:" -ForegroundColor White
-    Write-Host "  MCP ADO Server:       http://localhost:8001 (PID: $($adoProcess.Id))" -ForegroundColor $ADOColor
-    Write-Host "  MCP Docupedia Server: http://localhost:8002 (PID: $($docupediaProcess.Id))" -ForegroundColor $DocupediaColor
-    Write-Host "  Gateway UI:           Terminal Dashboard (PID: $($uiProcess.Id))" -ForegroundColor $UIColor
+    Write-Host "  MCP ADO Server:       http://localhost:8003/mcp (PID: $($adoProcess.Id))" -ForegroundColor $ADOColor
+    Write-Host "  MCP Docupedia Server: http://localhost:8004/mcp (PID: $($docupediaProcess.Id))" -ForegroundColor $DocupediaColor
+    Write-Host "  Gateway UI Dashboard: Terminal UI (PID: $($uiProcess.Id))" -ForegroundColor $UIColor
+    Write-Host ""
+    Write-Host "Fuer n8n verwende: http://host.docker.internal:8001/mcp" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Die Services laufen in separaten Fenstern." -ForegroundColor Gray
-    Write-Host "Druecke Ctrl+C in diesem Fenster, um alle Services zu beenden..." -ForegroundColor Gray
-    Write-Host ""
+    Write-Host "Schliesse die Fenster oder verwende stop-all.ps1 zum Beenden." -ForegroundColor Gray
 
     # Warte auf Benutzer-Unterbrechung
     while ($true) {
