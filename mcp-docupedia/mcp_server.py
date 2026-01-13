@@ -189,6 +189,10 @@ def healthcheck(request: Request) -> PlainTextResponse:
     return PlainTextResponse(f"Confluence/Docupedia MCP Server is running (Config: {config_status})")
 
 # ============= Confluence Tools =============
+# NOTE: Tools marked as "Official" are available in the official @atlassian-dc-mcp/confluence npm package
+# Tools marked as "Custom" are self-implemented extensions not available in the official package
+
+# ============= Official Confluence Tools (also in @atlassian-dc-mcp/confluence) =============
 
 @mcp.tool
 def search_content(
@@ -374,6 +378,8 @@ def list_spaces(
     }
     
     return _make_confluence_request("space", params=params)
+
+# ============= Custom Confluence Tools (self-implemented extensions) =============
 
 @mcp.tool
 def get_space(
