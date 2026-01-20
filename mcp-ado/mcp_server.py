@@ -535,6 +535,48 @@ def search_code(
     
     return response.json()
 
+@mcp.tool
+def get_repository_item(
+    repository_id: str,
+    path: str,
+    organization: Optional[str] = None,
+    project: Optional[str] = None,
+    include_content: bool = True
+) -> Dict[str, Any]:
+    """
+    Fetch a file (item) from an ADO Git repository by path.
+    Returns JSON metadata and content (if include_content=True).
+    
+    Args:
+        repository_id: Repository ID or name
+        path: File path (e.g., '/docs/src/stock_management/modules/introduction/pages/introduction.adoc')
+        organization: Azure DevOps organization name (defaults to config)
+        project: Project name (defaults to config)
+        include_content: Whether to include file content in response
+    
+    Returns:
+        File metadata and content
+    """
+    config = _load_config()
+    if organization is None:
+        organization = config.get('azure_devops', {}).get('organization')
+    if project is None:
+        project = config.get('azure_devops', {}).get('default_project')
+    
+    if not organization or not project:
+        raise ValueError("Organization and project must be provided or configured")
+    
+    # URL-encode the path parameter
+    from urllib.parse import quote
+    encoded_path = quote(path, safe='')
+    
+    endpoint = (
+        f"git/repositories/{repository_id}/items"
+        f"?path={encoded_path}&includeContent={'true' if include_content else 'false'}"
+    )
+    
+    return _make_ado_request(organization, project, endpoint)
+
 # ============= Resources =============
 
 @mcp.resource("ado://config")
