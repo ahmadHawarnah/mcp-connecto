@@ -130,7 +130,37 @@ def _make_ado_request(
             logger.error(f"ADO Error Response: {response.status_code}")
             logger.error(f"Response Headers: {dict(response.headers)}")
             logger.error(f"Response Body: {response.text[:500]}")
-            response.raise_for_status()
+            
+            # Provide more specific error messages based on status code
+            if response.status_code == 404:
+                # Extract the resource type from the URL for better error messages
+                if "/items?path=" in url:
+                    # Extract the path parameter for file not found errors
+                    import re
+                    path_match = re.search(r'path=([^&]+)', url)
+                    path = path_match.group(1) if path_match else "unknown"
+                    from urllib.parse import unquote
+                    decoded_path = unquote(path)
+                    raise ValueError(
+                        f"File or path not found in repository: {decoded_path}. "
+                        f"Please verify the path exists in the repository."
+                    )
+                else:
+                    raise ValueError(
+                        f"Resource not found (404). URL: {url}. "
+                        f"Please verify the resource exists and you have access to it."
+                    )
+            elif response.status_code == 401:
+                raise ValueError(
+                    "Authentication failed (401). Please check your Personal Access Token (PAT) is valid."
+                )
+            elif response.status_code == 403:
+                raise ValueError(
+                    "Access forbidden (403). Please verify you have permission to access this resource."
+                )
+            else:
+                # For other errors, raise the original HTTP error
+                response.raise_for_status()
         
         # Try to parse JSON response
         try:
@@ -148,6 +178,10 @@ def _make_ado_request(
             
     except requests.exceptions.RequestException as e:
         logger.error(f"Request failed: {e}")
+        # Don't wrap ValueError that we already raised above
+        if isinstance(e, requests.exceptions.HTTPError) and hasattr(e, 'response'):
+            # HTTPError already handled above, re-raise as is
+            raise
         raise ValueError(f"Failed to connect to Azure DevOps: {e}") from e
 
 # Initialize on module load for standalone mode
@@ -262,79 +296,6 @@ def get_work_item(
         f"wit/workitems/{work_item_id}?$expand=all"
     )
 
-@mcp.tool
-def create_work_item(
-    work_item_type: str,
-    title: str,
-    description: Optional[str] = None,
-    assigned_to: Optional[str] = None,
-    tags: Optional[str] = None,
-    organization: Optional[str] = None,
-    project: Optional[str] = None
-) -> Dict[str, Any]:
-    """
-    Create a new work item in Azure DevOps
-    
-    Args:
-        work_item_type: Type of work item (e.g., 'Task', 'Bug', 'User Story')
-        title: Work item title
-        description: Work item description (optional)
-        assigned_to: Email of person to assign to (optional)
-        tags: Comma-separated tags (optional)
-        organization: Azure DevOps organization name (defaults to config)
-        project: Project name (defaults to config)
-    
-    Returns:
-        Created work item details
-    """
-    config = _load_config()
-    if organization is None:
-        organization = config.get('azure_devops', {}).get('organization')
-    if project is None:
-        project = config.get('azure_devops', {}).get('default_project')
-    
-    if not organization or not project:
-        raise ValueError("Organization and project must be provided or configured")
-        
-    operations = [
-        {
-            "op": "add",
-            "path": "/fields/System.Title",
-            "value": title
-        }
-    ]
-    
-    if description:
-        operations.append({
-            "op": "add",
-            "path": "/fields/System.Description",
-            "value": description
-        })
-    
-    if assigned_to:
-        operations.append({
-            "op": "add",
-            "path": "/fields/System.AssignedTo",
-            "value": assigned_to
-        })
-    
-    if tags:
-        operations.append({
-            "op": "add",
-            "path": "/fields/System.Tags",
-            "value": tags
-        })
-    
-    base_url = f"https://dev.azure.com/{organization}/{project}/_apis"
-    url = f"{base_url}/wit/workitems/${work_item_type}?api-version=7.1"
-    
-    headers = _get_auth_header()
-    headers["Content-Type"] = "application/json-patch+json"
-    
-    response = requests.post(url, headers=headers, json=operations)
-    response.raise_for_status()
-    
-    return response.json()
 
 @mcp.tool
 def list_repositories(
@@ -550,12 +511,21 @@ def get_repository_item(
     Args:
         repository_id: Repository ID or name
         path: File path (e.g., '/docs/src/stock_management/modules/introduction/pages/introduction.adoc')
+               Must start with '/' and be the full path from repository root
         organization: Azure DevOps organization name (defaults to config)
         project: Project name (defaults to config)
         include_content: Whether to include file content in response
     
     Returns:
         File metadata and content
+    
+    Raises:
+        ValueError: If the file is not found (404) or path is invalid
+    
+    Note:
+        - The path is case-sensitive
+        - Use forward slashes (/) for path separators
+        - Verify the file exists in the repository before calling
     """
     config = _load_config()
     if organization is None:

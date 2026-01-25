@@ -205,7 +205,7 @@ def search_content(
     Search for content in Confluence using CQL (Confluence Query Language)
     
     Args:
-        query: Search query text
+        query: Search query text (will be automatically quoted if not already in CQL format)
         space_key: Limit search to specific space (optional, defaults to 'CONLP')
         content_type: Type of content to search (page, blogpost, comment, attachment) - defaults from config
         max_results: Maximum number of results to return - defaults from config
@@ -225,8 +225,16 @@ def search_content(
     if max_results is None:
         max_results = config.get('search_defaults', {}).get('max_results', 25)
     
-    # Build CQL query
-    cql_parts = [f'text ~ "{query}"', f'type = {content_type}']
+    # Build CQL query - only quote if query doesn't already contain quotes or CQL operators
+    if '"' in query or ' OR ' in query or ' AND ' in query or query.strip().startswith('text'):
+        # Query already contains CQL syntax, use as-is
+        text_query = query
+    else:
+        # Simple text query, wrap in quotes
+        text_query = f'"{query}"'
+    
+    # Build CQL query parts
+    cql_parts = [f'text ~ {text_query}', f'type = {content_type}']
     
     if space_key:
         cql_parts.append(f'space = "{space_key}"')

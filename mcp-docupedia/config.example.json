@@ -1,9 +1,7 @@
 {
   "confluence": {
     "host": "inside-docupedia.bosch.com/confluence",
-    "api_token": "",
-    "username": "",
-    "password": ""
+    "api_token": "${DOCUPEDIA_API_TOKEN}"
   },
   "proxy": {
     "enabled": true,
