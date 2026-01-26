@@ -1,32 +1,32 @@
 # MCP Gateway Server
 
-A flexible gateway server for aggregating multiple Model Context Protocol (MCP) servers into a single unified interface. The gateway supports loading MCP servers as Python modules for optimal performance or proxying to external HTTP servers.
+A gateway server for aggregating multiple Model Context Protocol (MCP) servers into a unified interface.
 
-![MCP Gateway Architecture](gateway.png)
+> **Note:** Installation and configuration details are in the [Root README](../README.md)
+
+## Description
+
+The MCP Gateway unifies multiple MCP servers into a single endpoint. Servers can be integrated as Python modules (optimal for performance) or as HTTP proxies (for external servers).
 
 ## Features
 
-- **Multiple Server Types**: Support for module-based and HTTP proxy servers
-- **Unified Interface**: Single endpoint to access all connected MCP servers
-- **Tool Namespacing**: Automatic prefixing prevents tool name conflicts
-- **Health Monitoring**: Built-in health checks and metrics for all servers
-- **CORS Support**: Configurable CORS for browser-based clients
-- **Interactive UI**: Terminal-based UI for monitoring server status
-- **Hot Configuration**: JSON-based configuration for easy setup
+- ✅ **Multiple Server Types**: Module-based or HTTP proxy
+- ✅ **Unified Interface**: One endpoint for all servers
+- ✅ **Tool Namespacing**: Automatic prefixes prevent conflicts
+- ✅ **Health Monitoring**: Built-in health monitoring
+- ✅ **CORS Support**: Configurable for browser clients
+- ✅ **Interactive UI**: Terminal UI for server monitoring
+- ✅ **JSON Configuration**: Easy setup
 
-## Installation
+## Endpoint
 
-```bash
-# Install dependencies using uv (recommended)
-uv sync
-
-# Or using pip
-pip install -e .
-```
+- **Port**: 8001
+- **URL**: `http://localhost:8001/mcp`
+- **For n8n**: `http://host.docker.internal:8001/mcp`
 
 ## Configuration
 
-Edit `gateway_config.json` to configure your MCP servers:
+Edit [gateway_config.json](gateway_config.json) to configure MCP servers:
 
 ```json
 {
@@ -39,18 +39,18 @@ Edit `gateway_config.json` to configure your MCP servers:
   },
   "child_servers": [
     {
-      "name": "Demo Server",
-      "type": "module",
-      "module_path": "mcp-demo-server",
-      "prefix": "demo",
-      "description": "Example demo server"
-    },
-    {
-      "name": "External Server",
+      "name": "ADO Server",
       "type": "proxy",
       "url": "http://localhost:8003/mcp",
-      "prefix": "external",
-      "health_endpoint": "/health"
+      "prefix": "ado",
+      "description": "Azure DevOps Integration"
+    },
+    {
+      "name": "Docupedia Server",
+      "type": "proxy",
+      "url": "http://localhost:8004/mcp",
+      "prefix": "docupedia",
+      "description": "Confluence/Docupedia Integration"
     }
   ]
 }
@@ -58,99 +58,48 @@ Edit `gateway_config.json` to configure your MCP servers:
 
 ### Server Types
 
-#### Module Servers
-Load MCP servers directly as Python modules for best performance:
+**Module Servers** - Load Python modules directly (best performance):
 ```json
 {
   "type": "module",
   "module_path": "path-to-module",
-  "module_name": "module_name",  // Optional, defaults to module_path
-  "init_function": "initialize",  // Optional, defaults to "initialize"
   "prefix": "unique-prefix"
 }
 ```
 
-#### Proxy Servers
-Connect to external MCP servers via HTTP:
+**Proxy Servers** - External MCP servers via HTTP:
 ```json
 {
   "type": "proxy",
   "url": "http://server-url/mcp",
-  "prefix": "unique-prefix",
-  "health_endpoint": "/health"  // Optional health check endpoint
+  "prefix": "unique-prefix"
 }
 ```
 
 ## Usage
 
-### Start the Gateway
+The gateway is started via [start-all.ps1](../start-all.ps1) in the root directory.
 
-```bash
-# With interactive UI (recommended)
-uv run ui.py
+## Further Information
 
-# Or run the server directly (starts on port 8001)
-uv run gateway_server.py
-
-# With custom port
-uv run gateway_server.py 8080
-```
-
-### API Endpoints
+The gateway aggregates all tools from connected servers and provides them under a single endpoint. Each tool automatically receives the configured prefix (e.g., `ado_list_work_items`, `docupedia_search_content`).
 
 - `GET /` - Gateway status
 - `GET /health` - Health check with server metrics
 - `POST /mcp` - MCP protocol endpoint
 - `GET /metrics` - Detailed metrics for all servers
 
-### Using with MCP Clients
-
-The gateway exposes all tools from connected servers with automatic prefixing:
-
-```python
-# Original tool: "search_emails"
-# Via gateway: "outlook_search_emails" (with prefix "outlook")
-```
-
-### Example Client Usage
-
-```python
-import httpx
-
-async with httpx.AsyncClient() as client:
-    # List available tools
-    response = await client.post("http://localhost:8002/mcp", json={
-        "jsonrpc": "2.0",
-        "method": "tools/list",
-        "params": {},
-        "id": 1
-    })
-    
-    # Call a tool (automatically routed to correct server)
-    response = await client.post("http://localhost:8002/mcp", json={
-        "jsonrpc": "2.0",
-        "method": "tools/call",
-        "params": {
-            "name": "demo_get_weather",  # Prefixed tool name
-            "arguments": {"location": "London"}
-        },
-        "id": 2
-    })
-```
-
 ### Using the Gateway Server with Github Copilot in VSCode
 
 Add the following `mcp.json` file to the `.vscode` folder in the workspace you want to use the MCP gateway server in:
 ```json
 {
-    "servers": {
-        "bre_tools_server": {
-            "command": "cmd",
-            "args": [
-                "python \\path\\to\\your\\GIT\\mcp-gateway\\gateway_server.py --no_http"
-            ]
-        }
+  "servers": {
+    "mcp-gateway": {
+      "type": "http",
+      "url": "http://localhost:8001/mcp"
     }
+  }
 }
 ```
 
@@ -227,37 +176,3 @@ curl http://localhost:8002/metrics
 4. **Event Loop Errors**
    - The gateway handles async operations automatically
    - Ensure you're using the latest version
-
-## Development
-
-### Adding New Server Types
-
-Extend the gateway by adding new server types in `gateway_server.py`:
-
-1. Add handler in `initialize_servers()`
-2. Implement connection logic
-3. Add routing in request handlers
-
-### Running Tests
-
-```bash
-# Run gateway with test configuration
-uv run gateway_server.py --config test_config.json
-
-# Test health endpoint
-curl http://localhost:8002/health
-
-# Test MCP protocol
-uv run test_client.py
-```
-
-## License
-
-MIT
-
-## Contributing
-
-Contributions are welcome! Please ensure:
-- Code follows existing patterns
-- Configuration examples are updated
-- Health checks are implemented for new server types

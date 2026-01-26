@@ -64,9 +64,4 @@ htmlcov/
 tmp/
 temp/
  
-#configfile
-*config.json
-mcp-ado/config.json
-mcp-ado/config.json
-mcp-ado/config.json
-docker-compose.yml
+#configfiles

@@ -1,7 +1,6 @@
 {
   "confluence": {
     "host": "inside-docupedia.bosch.com/confluence",
-    "api_token": "${CONFLUENCE_API_TOKEN}",
     "default_space": "CONLP"
   },
   "proxy": {

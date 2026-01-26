@@ -2,7 +2,6 @@
   "azure_devops": {
     "organization": "bosch-bci",
     "default_project": "Nx_IES",
-    "pat": "${AZURE_DEVOPS_PAT}",
     "api_version": "7.1"
   },
   "server": {

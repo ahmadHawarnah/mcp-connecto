@@ -1,7 +1,7 @@
 {
   "confluence": {
     "host": "inside-docupedia.bosch.com/confluence",
-    "api_token": "${DOCUPEDIA_API_TOKEN}"
+    "default_space": "Your_Space_Key"
   },
   "proxy": {
     "enabled": true,
@@ -12,13 +12,8 @@
     "port": 8004,
     "host": "0.0.0.0"
   },
-  "common_spaces": {
-    "example": "SPACE_KEY_1",
-    "documentation": "DOCS",
-    "projects": "PROJ"
-  },
   "search_defaults": {
-    "max_results": 25,
+    "max_results": 30,
     "content_type": "page"
   }
 }

@@ -287,79 +287,6 @@ def get_page(
         raise ValueError("Either page_id or both page_title and space_key are required")
 
 @mcp.tool
-def create_page(
-    space_key: str,
-    title: str,
-    content: str,
-    parent_id: Optional[str] = None,
-    content_format: str = "storage"
-) -> Dict[str, Any]:
-    """
-    Create a new Confluence page
-    
-    Args:
-        space_key: Space key where the page will be created
-        title: Page title
-        content: Page content in Confluence storage format or wiki markup
-        parent_id: Parent page ID (optional, for creating child pages)
-        content_format: Content format ('storage' or 'wiki')
-    
-    Returns:
-        Created page details
-    """
-    body = {
-        "type": "page",
-        "title": title,
-        "space": {"key": space_key},
-        "body": {
-            content_format: {
-                "value": content,
-                "representation": content_format
-            }
-        }
-    }
-    
-    if parent_id:
-        body["ancestors"] = [{"id": parent_id}]
-    
-    return _make_confluence_request("content", method="POST", body=body)
-
-@mcp.tool
-def update_page(
-    page_id: str,
-    title: str,
-    content: str,
-    version_number: int,
-    content_format: str = "storage"
-) -> Dict[str, Any]:
-    """
-    Update an existing Confluence page
-    
-    Args:
-        page_id: ID of the page to update
-        title: New page title
-        content: New page content
-        version_number: Current version number (must be incremented)
-        content_format: Content format ('storage' or 'wiki')
-    
-    Returns:
-        Updated page details
-    """
-    body = {
-        "version": {"number": version_number + 1},
-        "title": title,
-        "type": "page",
-        "body": {
-            content_format: {
-                "value": content,
-                "representation": content_format
-            }
-        }
-    }
-    
-    return _make_confluence_request(f"content/{page_id}", method="PUT", body=body)
-
-@mcp.tool
 def list_spaces(
     max_results: Optional[int] = None,
     space_type: str = "global"
@@ -509,34 +436,6 @@ def get_page_comments(
     }
     
     return _make_confluence_request(f"content/{page_id}/child/comment", params=params)
-
-@mcp.tool
-def add_comment(
-    page_id: str,
-    comment_text: str
-) -> Dict[str, Any]:
-    """
-    Add a comment to a Confluence page
-    
-    Args:
-        page_id: Page ID to comment on
-        comment_text: Comment text
-    
-    Returns:
-        Created comment details
-    """
-    body = {
-        "type": "comment",
-        "container": {"id": page_id, "type": "page"},
-        "body": {
-            "storage": {
-                "value": comment_text,
-                "representation": "storage"
-            }
-        }
-    }
-    
-    return _make_confluence_request("content", method="POST", body=body)
 
 @mcp.tool
 def get_page_labels(

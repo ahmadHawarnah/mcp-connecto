@@ -35,21 +35,21 @@ $processes = @()
 try {
     # 1. MCP ADO Server starten (Port 8003)
     Write-Host "[1/3] Starte MCP ADO Server..." -ForegroundColor $ADOColor
-    $adoProcess = Start-Process -FilePath "uv" -ArgumentList "run", "mcp_server.py" -WorkingDirectory ".\mcp-ado" -WindowStyle Normal -PassThru
+    $adoProcess = Start-Process -FilePath "uv" -ArgumentList "run", "--project", ".", "python", "mcp-ado/mcp_server.py" -WorkingDirectory "." -WindowStyle Normal -PassThru
     $processes += $adoProcess
     Write-Host "      OK MCP ADO Server gestartet (Port 8003, PID: $($adoProcess.Id))" -ForegroundColor $ADOColor
     Start-Sleep -Milliseconds 2000
 
     # 2. MCP Docupedia Server starten (Port 8004)
     Write-Host "[2/3] Starte MCP Docupedia Server..." -ForegroundColor $DocupediaColor
-    $docupediaProcess = Start-Process -FilePath "uv" -ArgumentList "run", "mcp_server.py" -WorkingDirectory ".\mcp-docupedia" -WindowStyle Normal -PassThru
+    $docupediaProcess = Start-Process -FilePath "uv" -ArgumentList "run", "--project", ".", "python", "mcp-docupedia/mcp_server.py" -WorkingDirectory "." -WindowStyle Normal -PassThru
     $processes += $docupediaProcess
     Write-Host "      OK MCP Docupedia Server gestartet (Port 8004, PID: $($docupediaProcess.Id))" -ForegroundColor $DocupediaColor
     Start-Sleep -Milliseconds 2000
 
     # 3. Gateway UI starten (Port 8001)
     Write-Host "[3/3] Starte Gateway UI Dashboard..." -ForegroundColor $UIColor
-    $uiProcess = Start-Process -FilePath "uv" -ArgumentList "run", "ui.py" -WorkingDirectory ".\mcp-gateway" -WindowStyle Normal -PassThru
+    $uiProcess = Start-Process -FilePath "uv" -ArgumentList "run", "--project", ".", "python", "mcp-gateway/ui.py" -WorkingDirectory "." -WindowStyle Normal -PassThru
     $processes += $uiProcess
     Write-Host "      OK Gateway UI Dashboard gestartet (Port 8001, PID: $($uiProcess.Id))" -ForegroundColor $UIColor
     
