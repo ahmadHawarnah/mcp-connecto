@@ -27,7 +27,7 @@ cd mcp-connector
 ### 2. Install Dependencies
 
 ```powershell
-# Automatic installation with setup script
+# Automatic installation with setup script (windows)
 .\setup.ps1
 
 # Or manually with uv
@@ -39,6 +39,18 @@ pip install -e .
 
 ## Configuration
 
+### Create .env File
+
+Create a `.env` file in the root directory or you have `env.txt` file, just rename it to `.env` and fill in the required tokens.
+
+```bash
+# Azure DevOps
+AZURE_DEVOPS_PAT=your-pat-token
+
+# Confluence
+CONFLUENCE_API_TOKEN=your-confluence-token
+```
+
 ### Azure DevOps (mcp-ado)
 
 1. Copy the example configuration:
@@ -47,7 +59,7 @@ pip install -e .
 Copy-Item mcp-ado\config.example.json mcp-ado\config.json
 ```
 
-2. Edit `mcp-ado\config.json`:
+1. Edit `mcp-ado\config.json`:
 
 ```json
 {
@@ -68,7 +80,7 @@ Copy-Item mcp-ado\config.example.json mcp-ado\config.json
    - Work Items: Read & Write
    - Build: Read
    - Project and Team: Read
-4. Copy token and paste into `config.json`
+4. Copy token and paste into `.env`
 
 ### Confluence/Docupedia (mcp-docupedia)
 
@@ -78,7 +90,7 @@ Copy-Item mcp-ado\config.example.json mcp-ado\config.json
 Copy-Item mcp-docupedia\config.example.json mcp-docupedia\config.json
 ```
 
-2. Edit `mcp-docupedia\config.json`:
+1. Edit `mcp-docupedia\config.json`:
 
 **Option A: With Personal Access Token (recommended)**
 
@@ -86,31 +98,23 @@ Copy-Item mcp-docupedia\config.example.json mcp-docupedia\config.json
 {
   "confluence": {
     "host": "inside-docupedia.bosch.com/confluence",
+    "default_space": "Your_Space_Key"
   },
   "proxy": {
     "enabled": true,
     "url": "http://localhost:3128",
     "disable_ssl_verification": true
-  }
-}
-```
-
-**Option B: With Username/Password (not tried)**
-
-```json
-{
-  "confluence": {
-    "host": "inside-docupedia.bosch.com/confluence",
-    "api_token": "",
-    "username": "your-username",
-    "password": "your-password"
   },
-  "proxy": {
-    "enabled": true,
-    "url": "http://localhost:3128",
-    "disable_ssl_verification": true
+  "server": {
+    "port": 8004,
+    "host": "0.0.0.0"
+  },
+  "search_defaults": {
+    "max_results": 30,
+    "content_type": "page"
   }
 }
+
 ```
 
 **Creating a PAT:**
@@ -118,6 +122,7 @@ Copy-Item mcp-docupedia\config.example.json mcp-docupedia\config.json
 1. Log in to Confluence
 2. Profile → Settings → Personal Access Tokens
 3. "Create token" → Give it a name → Copy token
+4. Paste token into `.env`
 
 **Proxy Configuration:**
 
@@ -155,25 +160,6 @@ Edit `mcp-gateway\gateway_config.json`:
 }
 ```
 
-### Environment Variables (Optional)
-
-Create a `.env` file in the root directory:
-
-```bash
-# Azure DevOps
-AZURE_DEVOPS_PAT=your-pat-token
-
-# Confluence
-CONFLUENCE_API_TOKEN=your-confluence-token
-
-# Proxy
-HTTP_PROXY=http://localhost:3128
-HTTPS_PROXY=http://localhost:3128
-http_proxy=http://localhost:3128
-https_proxy=http://localhost:3128
-NODE_TLS_REJECT_UNAUTHORIZED=0
-```
-
 ## Usage
 
 ### Start All Services
@@ -195,6 +181,7 @@ uv run mcp-gateway/ui.py
 ```
 
 The servers:
+
 - MCP ADO Server (Port 8003)
 - MCP Docupedia Server (Port 8004)
 - Gateway UI Dashboard (Port 8001)
