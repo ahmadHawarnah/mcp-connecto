@@ -24,16 +24,28 @@ git clone <repository-url>
 cd mcp-connector
 ```
 
-### 2. Install Dependencies
+### 2. Setup Virtual Environment
 
 ```powershell
-# Automatic installation with setup script (windows)
-.\setup.ps1
+# with uv
+uv venv .venv
 
-# Or manually with uv
+# Or with python
+python -m venv .venv
+
+# Activate the virtual environment
+.\.venv\Scripts\Activate.ps1
+```
+
+your shell prompt should now show `(.venv)` indicating the virtual environment is active.
+
+### 3. Install Dependencies
+
+```powershell
+# with uv
 uv sync
 
-# Or with pip
+# Or with pip please copy also the point (.)
 pip install -e .
 ```
 
@@ -49,6 +61,13 @@ AZURE_DEVOPS_PAT=your-pat-token
 
 # Confluence
 CONFLUENCE_API_TOKEN=your-confluence-token
+
+# Proxy Configuration
+HTTP_PROXY=http://localhost:3128
+HTTPS_PROXY=http://localhost:3128
+http_proxy=http://localhost:3128
+https_proxy=http://localhost:3128
+NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
 
 ### Azure DevOps (mcp-ado)
@@ -90,10 +109,11 @@ Copy-Item mcp-ado\config.example.json mcp-ado\config.json
 Copy-Item mcp-docupedia\config.example.json mcp-docupedia\config.json
 ```
 
-1. Edit `mcp-docupedia\config.json`:
+2. Edit `mcp-docupedia\config.json`:
 
-**Option A: With Personal Access Token (recommended)**
+>`default_space`: Use your Confluence space key (e.g., "DOCUPEDIA")
 
+>`max_results`: Maximum number of search results to return. This can be adjusted based on your needs. Depending how many results you want to give back per search to the AI model.
 ```json
 {
   "confluence": {
