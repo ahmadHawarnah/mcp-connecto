@@ -271,12 +271,7 @@ BLOCK 1 — JSON report (schema)
     "dod_coverage": <float>,
     "citation_rate": <float>,
     "clickable_links_present": true/false,
-    "clickable_link_ratio": <float>,
     "process_violations_count": <int>,
-    "mcp_calls_total": <int>,
-    "mcp_calls_allowed": <int>,
-    "mcp_calls_disallowed": <int>,
-    "mcp_alignment_ratio": <float>,
     "off_corpus_use": true/false
   },
   "hypothesis_indicators": {
@@ -287,9 +282,39 @@ BLOCK 1 — JSON report (schema)
 }
 
 Metric definitions:
-- claims_total counts ONLY material claims extracted from response_text (excluding hypotheses/interpretations per RULE 2a).
-- hallucination_rate = (claims_unsupported + claims_contradicted) / max(claims_total, 1).
-- citation_rate counts only material claims with explicit references.
+
+**Top-level metrics:**
+- **test_case**: Identified test case type based on query keywords (implement_workitem|bug_analysis|dependencies|bug_or_expected|workitem_info|documentation_target|unknown).
+- **score**: Overall quality score from 1 (Perfect) to 5 (Insufficient).
+- **score_label**: Human-readable label for the score (Perfect|Good|Acceptable|Problematic|Insufficient).
+- **document_grounded**: Whether the answer uses ONLY evidence from chunks_text and mcp_call_log (RULE 1). False if unsupported claims exist or off_corpus_use is true.
+- **context_respected**: Whether the answer adheres to gating_hint constraints (scope, read-only, allowed data sources) per RULE 4. False if process violations occur.
+- **out_of_context_mentions**: Array of specific violations where context/scope was exceeded.
+
+**Claims metrics:**
+- **claims_total**: Count of material claims extracted from response_text (excluding hypotheses/interpretations per RULE 2a). Material claims are atomic, checkable factual assertions about work items, artifacts, relationships, repository/confluence findings, or search outcomes.
+- **claims_supported**: Number of material claims backed by evidence in chunks_text or mcp_call_log.
+- **claims_unsupported**: Number of material claims without evidence support.
+- **claims_contradicted**: Number of material claims that contradict the evidence.
+- **support_ratio**: claims_supported / max(claims_total, 1). Ratio of supported claims.
+- **hallucination_rate**: (claims_unsupported + claims_contradicted) / max(claims_total, 1). Ratio of unsupported or contradicted claims.
+
+**DoD metrics:**
+- **dod_expected**: Number of items in the selected DoD checklist (0 if test_case is unknown).
+- **dod_covered**: Number of DoD checklist items clearly covered in response_text.
+- **dod_coverage**: dod_covered / dod_expected (or 0.0 if dod_expected is 0). Ratio of DoD completion.
+
+**Citation metrics:**
+- **citation_rate**: Ratio of material claims with explicit references (labels/URLs).
+- **clickable_links_present**: Whether the answer contains any http/https URLs.
+
+**Violation metrics:**
+- **process_violations_count**: Number of disallowed actions implied (write/merge/update/delete/execute/run).
+- **off_corpus_use**: Whether the answer references sources/IDs/URLs not present in chunks_text or mcp_call_log.results (RULE 5).
+
+**Quality signals:**
+- **quality_signal**: High if claims_unsupported==0 AND claims_contradicted==0 AND off_corpus_use==false; otherwise medium or low.
+- **traceability_signal**: High/medium/low based on citation_rate and clickable_link_ratio.
 
 BLOCK 2 — Human Assessment
 Short summary: why the score; strengths/weaknesses; which DoD items were missed (if any); what to fix (e.g., rephrase negative evidence when tools errored; add citations; remove off-corpus).
